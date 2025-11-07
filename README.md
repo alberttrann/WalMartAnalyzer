@@ -25,9 +25,7 @@ This project moves beyond a simple predictive model by deploying it as a robust,
 |-- api_backend/
 |   |-- api.py                      # Flask API server (the "brain")
 |   |-- predictor.py                # Core ML logic and feature engineering
-|   |-- walmart_sales_model_.../    # Directory containing the trained model & artifacts
-|   |-- requirements.txt            # Python dependencies for the backend
-|
+|   |-- walmart_sales_model_.../    # Directory containing the trained model & artifacts|
 |-- data/
 |   |-- full_historical_data.csv    # The single source of truth for the backend
 |   |-- data_metadata.json          # Auto-generated description of the historical data
@@ -35,7 +33,7 @@ This project moves beyond a simple predictive model by deploying it as a robust,
 |   |-- (app_data.csv, test_sample.csv - Deprecated, can be deleted)
 |
 |-- app.py                          # Streamlit frontend application (the "face")
-|-- requirements_app.txt            # Python dependencies for the frontend
+|-- requirements.txt                # Python dependencies 
 |-- README.md                       # This file
 ```
 
@@ -434,3 +432,35 @@ To understand how the pieces fit together, here is the end-to-end flow when a us
     ```
 11. **[Frontend]** The Streamlit app receives this JSON. The spinner disappears.
 12. **[Frontend]** It uses the data in the response to populate the bar chart, the ROI gauge, the financial analysis metrics, and the final recommendation card. The user sees the result.
+
+![alt text](image.png)
+
+![alt text](image-1.png)
+
+![alt text](image-2.png)
+
+![alt text](image-3.png)
+
+![alt text](image-4.png)
+
+![alt text](image-5.png)
+
+![alt text](image-6.png)
+
+![alt text](image-7.png)
+
+![alt text](image-8.png)
+
+![alt text](image-9.png)
+
+![alt text](image-10.png)
+
+![alt text](image-11.png)
+
+![alt text](image-12.png)
+
+![alt text](image-13.png)
+
+![alt text](image-14.png)
+
+![alt text](image-15.png)
