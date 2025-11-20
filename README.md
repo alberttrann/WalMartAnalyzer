@@ -58,7 +58,7 @@ This is the **most important file** in the project. It is the sole data source f
 <details>
 <summary>The code for saving full historical data</summary>
 
-```
+```py
 # ==============================================================================
 # PRODUCTION-GRADE DATA PREPARATION FOR FLASK BACKEND
 # This creates a SINGLE, TIME-ORDERED dataset with ALL historical sales
