@@ -1,3 +1,4 @@
+#api_backend/api.py
 from flask import Flask, request, jsonify
 from predictor import WalmartSalesPredictor
 import os
@@ -7,7 +8,7 @@ import traceback
 # CONFIGURATION
 # ==============================================================================
 CONFIG = {
-    "MODEL_DIR": "walmart_sales_model_20251027_155246",
+    "MODEL_DIR": "walmart_sales_model_20251121_104049",
     "DATA_PATH": "../data/full_historical_data.csv"
 }
 
@@ -99,11 +100,11 @@ def get_hotspots():
 if __name__ == '__main__':
     if predictor:
         print("\n======================================================")
-        print("✅ [API] All systems ready. You can now start the frontend.")
+        print(" [API] All systems ready. You can now start the frontend.")
         print("======================================================")
     else:
         print("\n======================================================")
-        print("❌ [API] CRITICAL ERROR: Predictor failed to load.")
+        print(" [API] CRITICAL ERROR: Predictor failed to load.")
         print("   The API is running but will return errors.")
         print("======================================================")
     

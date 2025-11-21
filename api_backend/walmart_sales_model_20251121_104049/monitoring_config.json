@@ -1,0 +1,14 @@
+{
+  "thresholds": {
+    "max_error_pct": 30,
+    "min_r2": 0.85,
+    "max_mape": 15
+  },
+  "baseline_metrics": {
+    "r2": 0.9996109459959898,
+    "rmse": 433.10878175939246,
+    "mape": 1.7537744401453017
+  },
+  "retrain_schedule": "monthly",
+  "alert_email": "data-science-team@walmart.com"
+}
