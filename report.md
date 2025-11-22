@@ -5,7 +5,9 @@
 **Team:** FPT Coders  
 **Project Duration:** 3 Weeks  
 **Date:** November 19, 2025  
-**GitHub Link**: [Github](https://github.com/alberttrann/WalMartAnalyzer) & [Kaggle Notebook](https://www.kaggle.com/code/alberttrann/walmart-sales-forecast-notebook)
+**Product Link**: [Github](https://github.com/alberttrann/WalMartAnalyzer) & [Kaggle Notebook](https://www.kaggle.com/code/alberttrann/walmart-sales-forecast-notebook) & [HuggingFace Deployment](https://huggingface.co/spaces/minhhungg/WalMartAnalyzer)
+
+
 ---
 
 ### **Appendix A: Technical Deep Dive - A Cell-by-Cell Journey**
@@ -15,12 +17,12 @@ This appendix provides a granular, step-by-step analysis of the project's techni
 ---
 
 
-### **Phase 1 - Establishing a Trusted Foundation: Data Ingestion, Schema Validation, and Boundary Analysis**
+#### **Phase 1 - Establishing a Trusted Foundation: Data Ingestion, Schema Validation, and Boundary Analysis**
 
 The success of any machine learning project is fundamentally predicated on the quality and integrity of its foundational data. Phase 1 was not merely a procedural step of loading files; it was a deliberate and rigorous process of establishing a **trusted, validated, and structurally sound data foundation**. Our methodology in this phase was guided by the "fail-fast" principle: to identify and halt on any foundational data integrity issues at the earliest possible moment, preventing the silent propagation of errors into the complex feature engineering and modeling stages.
 
 
-#### **1.1 Initial Data Loading & Schema Inference**
+##### **1.1 Initial Data Loading & Schema Inference**
 
 **Objective:** To ingest the raw CSV files into memory as pandas DataFrames, while simultaneously enforcing the correct data schema for critical columns like `Date`.
 
@@ -44,7 +46,7 @@ The `parse_dates=['Date']` argument is not a minor convenience; it is a strategi
 The `train_data.shape` output of `(421570, 5)` provided our first key metric. This number represents the total count of unique weekly sales observations at the most granular level of our problem: the **Store-Department-Week** combination. This defines the fundamental unit of our analysis and forecasting target.
 
 
-#### **1.2 Primary & Natural Key Validation: The Zero-Tolerance Check for Duplication**
+##### **1.2 Primary & Natural Key Validation: The Zero-Tolerance Check for Duplication**
 
 **Objective:** To programmatically and definitively verify the uniqueness of the keys that define our core business entities (stores) and transactions (weekly sales), ensuring the data conforms to its expected relational structure.
 
@@ -71,7 +73,7 @@ It is crucial to understand what would have happened had these assertions failed
 **Conclusion:** The successful passing of these assertions provided a high degree of confidence in the structural integrity and referential reliability of our core datasets. It confirmed that our data adheres to its implicit "data contract," a prerequisite for any meaningful analysis.
 
 
-#### **1.3 Temporal Boundary Analysis: Defining the Problem Space and Identifying Opportunities**
+##### **1.3 Temporal Boundary Analysis: Defining the Problem Space and Identifying Opportunities**
 
 **Objective:** To precisely map the time-based scope of our data, identify any critical misalignments between the datasets, and uncover strategic opportunities presented by the data's temporal structure.
 
@@ -100,11 +102,11 @@ In summary, Phase 1 was far more than a simple data loading exercise. It was a r
 
 ---
 
-### **Phase 2 - A Masterclass in Contextual Feature Engineering & Preprocessing**
+#### **Phase 2 - A Masterclass in Contextual Feature Engineering & Preprocessing**
 
 This phase was the project's intellectual core, where raw data was systematically transformed into a high-fidelity, feature-rich dataset. Our philosophy was not merely to clean the data but to encode deep business logic, statistical properties, and temporal context into it. Every action was deliberate, hypothesis-driven, and validated against the data itself.
 
-#### **2.1 Data Unification & Integrity Assurance**
+##### **2.1 Data Unification & Integrity Assurance**
 
 **Objective:** To create a single, unified, and validated master DataFrame that serves as the "single source of truth" for all subsequent analysis and modeling.
 
@@ -116,7 +118,7 @@ The `_merge` column produced by the `indicator=True` flag was immediately checke
 **Strategic Insight:** This meticulous, validated merging process prevents silent data loss or the creation of spurious `NaN` values that can corrupt an entire modeling pipeline. It establishes a trusted foundation for all downstream work.
 
 
-#### **2.2 Temporal Decomposition & The Power of Cyclical Encoding**
+##### **2.2 Temporal Decomposition & The Power of Cyclical Encoding**
 
 **Objective:** To deconstruct the monolithic `Date` field into a set of numerical features that can capture seasonality at multiple granularities, and to correctly represent their cyclical nature to the model.
 
@@ -132,7 +134,7 @@ data['Week_cos'] = np.cos(2 * np.pi * data['Week'] / 52)
 
 **Rationale & Strategic Insight:** This technique transforms the scalar concept of "week number" into a two-dimensional coordinate `(Week_sin, Week_cos)`. Now, the Euclidean distance between Week 52 (coordinate ≈) and Week 1 (coordinate ≈ [0.12, 0.99]) is small, correctly representing their temporal proximity. This is a far more sophisticated representation of time that allows all models, from linear to tree-based, to seamlessly understand the cyclical nature of seasons and holidays. The distinct, multi-peaked patterns for `Month_sin` and `Month_cos` in the EDA histograms visually confirm the success of this transformation.
 
-#### **2.3 From Missing Data to Business Signal: The Markdown Hypothesis**
+##### **2.3 From Missing Data to Business Signal: The Markdown Hypothesis**
 
 **Objective:** To confront the massive missingness in the `MarkDown1-5` columns (ranging from 64% to 74%) and transform this apparent data quality issue into a powerful predictive feature.
 
@@ -154,7 +156,7 @@ data['Week_cos'] = np.cos(2 * np.pi * data['Week'] / 52)
 *   **Scenario B:** `Promo_Active=1`, `Total_Markdown=0` (A planned promotion was active, but its value was zero, perhaps due to stock issues or a pricing error).
 This nuanced distinction provides a richer signal to the model, directly contributing to its high accuracy.
 
-#### **2.4 Hierarchical Imputation: Preserving Local Context in Economic Data**
+##### **2.4 Hierarchical Imputation: Preserving Local Context in Economic Data**
 
 **Objective:** To intelligently fill the small number of missing values in the `CPI` and `Unemployment` columns while respecting the fact that economic conditions are regional, not global.
 
@@ -167,7 +169,7 @@ data['CPI'] = data.groupby('Store')['CPI'].transform(lambda x: x.fillna(x.median
 **Rationale & Strategic Insight:** This code fills a missing `CPI` value for a given store with the median `CPI` of *that specific store's* entire history. This preserves local economic context; a store in a high-cost-of-living area will have its missing values imputed with a high CPI, not diluted by the global average. A final global median `fillna` was used as a robust fallback for the rare case of a store with no CPI data at all. This context-aware method ensures our economic features are as accurate and representative as possible.
 
 
-#### **2.5 Target Variable Engineering: Stabilizing the Foundation for Prediction**
+##### **2.5 Target Variable Engineering: Stabilizing the Foundation for Prediction**
 
 **Objective:** To transform the raw `Weekly_Sales` target variable into a statistically "well-behaved" quantity that is more stable, less skewed, and ultimately more predictable.
 
@@ -187,12 +189,12 @@ data['CPI'] = data.groupby('Store')['CPI'].transform(lambda x: x.fillna(x.median
 
 ---
 
-### **Phase 3 - Deep Exploratory Data Analysis (EDA) & Strategic Hypothesis Validation**
+#### **Phase 3 - Deep Exploratory Data Analysis (EDA) & Strategic Hypothesis Validation**
 
 **Objective:** To transition from a preprocessed dataset to a state of deep strategic intelligence. This phase was not merely about creating charts; it was a systematic investigation to test our core hypotheses about the data's underlying structure, validate the efficacy of our feature engineering, and, most critically, to uncover the statistical properties that would dictate our entire modeling strategy. We sought to answer fundamental questions: What is the true shape of our data? Which signals are strong and which are noise? What hidden relationships and collinearities exist that could trap a naive modeling approach?
 
 
-#### **3.1 Univariate Analysis: Deconstructing Individual Feature DNA**
+##### **3.1 Univariate Analysis: Deconstructing Individual Feature DNA**
 
 Before analyzing interactions, we first had to understand the character of each feature in isolation. We used a combination of descriptive statistics, histograms, and box plots to dissect their distributions and identify anomalies.
 
@@ -218,7 +220,7 @@ Before analyzing interactions, we first had to understand the character of each 
         *   **Strategic Decision:** This finding was pivotal. It gave us the definitive evidence to **not remove these outliers**. Doing so would have blinded the model to the most important and volatile sales periods. Instead, this directed us towards choosing models (like gradient boosted trees) that are inherently robust to such extreme values.
 
 
-#### **3.2 Bivariate & Multivariate Analysis: Uncovering the Web of Relationships**
+##### **3.2 Bivariate & Multivariate Analysis: Uncovering the Web of Relationships**
 
 Here, we moved beyond individual features to map the complex network of relationships between them.
 
@@ -240,7 +242,7 @@ Here, we moved beyond individual features to map the complex network of relation
         *   **Interpretation:** This confirmed that our feature engineering had successfully created new, cohesive groups of signals that the model could potentially learn from as a unit.
 
 
-#### **3.3 Statistical Hypothesis Testing: Adding Quantitative Rigor**
+##### **3.3 Statistical Hypothesis Testing: Adding Quantitative Rigor**
 
 We used formal statistical tests to move beyond visual inspection and quantitatively validate the significance of our features.
 
@@ -256,7 +258,7 @@ We used formal statistical tests to move beyond visual inspection and quantitati
     3.  **Discrepancies Between Pearson & Spearman:** For `Temperature`, the Pearson correlation was not significant (p=0.133), but the Spearman correlation was highly significant (p < 0.001). This is a nuanced but important finding. Pearson measures *linear* relationships, while Spearman measures *monotonic* (consistently increasing or decreasing) relationships. This discrepancy suggests the relationship between Temperature and Sales is not a straight line but may be, for example, a curve (e.g., sales increase up to a certain temperature, then plateau or decline), which Spearman can detect but Pearson cannot. This hints that non-linear models will be more effective.
 
 
-#### **3.4 The Decisive Blow: Multicollinearity Diagnosis and Its Strategic Mandate**
+##### **3.4 The Decisive Blow: Multicollinearity Diagnosis and Its Strategic Mandate**
 
 This final stage of EDA was the most consequential, as its findings rendered an entire class of models unsuitable for this problem.
 
@@ -344,7 +346,7 @@ In summary, Phase 3 was a mission of strategic intelligence. We validated that o
 
 ---
 
-### **Phase 6 - The Model Gauntlet: A Systematic Search for the Optimal Algorithm**
+#### **Phase 6 - The Model Gauntlet: A Systematic Search for the Optimal Algorithm**
 
 **Objective:** To systematically identify the single best-performing predictive model through a rigorous, head-to-head competition. This phase was designed not just to find a "good" model, but to prove its superiority through a robust validation strategy and to understand the strengths and weaknesses of different algorithmic approaches when applied to this complex retail dataset.
 
@@ -373,7 +375,7 @@ Before training a single model, we established a strict experimental framework t
 
 **6.2 The Gauntlet: A Blow-by-Blow Account of the Model Competition**
 
-#### **Model 1: RidgeCV (The Linear Baseline)**
+##### **Model 1: RidgeCV (The Linear Baseline)**
 
 *   **Hypothesis:** A well-regularized linear model, aided by robust scaling and a log-transformed target, might capture the primary signals in the data.
 *   **Implementation:** The model was wrapped in a `Pipeline` with a `RobustScaler` (chosen to be resilient to the outliers we identified in EDA) and `OneHotEncoder`. `RidgeCV` automatically tested 20 different regularization strengths across the 5 time-series folds.
@@ -383,7 +385,7 @@ Before training a single model, we established a strict experimental framework t
     *   **Analysis:** This catastrophic failure was not a surprise but an **empirical validation of our EDA findings**. Our VIF analysis in Phase 3 revealed extreme multicollinearity (VIF > 200) among our engineered markdown features. Linear models are pathologically sensitive to multicollinearity, causing their coefficients to become unstable and explode, leading to nonsensical predictions. The log transformation and robust scaling were insufficient to overcome the model's fundamental inability to capture the complex, non-linear, and interactive relationships in the data.
 *   **Conclusion:** The Ridge model served its purpose as a crucial diagnostic tool. It definitively proved that the problem was far too complex for a linear approach and that success would require models capable of handling high-dimensional interactions and multicollinearity.
 
-#### **Model 2: LSTM (The Deep Learning Challenger)**
+##### **Model 2: LSTM (The Deep Learning Challenger)**
 
 *   **Hypothesis:** An LSTM network, designed for sequences, could implicitly learn the temporal patterns and feature interactions, potentially even outperforming models reliant on manual feature engineering.
 *   **Implementation:** We reshaped the data into a `(samples, timesteps=1, features)` format and scaled all features to a range using `MinMaxScaler`. The architecture was a simple but robust stack: `LSTM(80) -> Dropout(0.2) -> Dense(35) -> Dense(1)`. We used `EarlyStopping` to halt training when validation loss stopped improving, which occurred after 194 epochs.
@@ -393,7 +395,7 @@ Before training a single model, we established a strict experimental framework t
     *   **Analysis:** The model massively outperformed the naive baseline, demonstrating its ability to learn from the rich feature set. The training history plot shows a smooth convergence of training and validation loss, indicating a well-behaved training process. However, it was ultimately outperformed by the tree-based models. The key technical insight here is that for this tabular, feature-rich dataset, our **explicitly engineered temporal features (lags, rolling averages) provided a more direct and powerful signal than the patterns the LSTM could implicitly learn from the sequence of feature vectors.**
 *   **Conclusion:** The LSTM is a powerful algorithm but was less efficient (training time: 8.22 minutes) and ultimately less accurate than gradient boosting *for this specific problem structure where context can be effectively engineered into features*.
 
-#### **Models 3 & 4: XGBoost vs. LightGBM (The Gradient Boosting Titans)**
+##### **Models 3 & 4: XGBoost vs. LightGBM (The Gradient Boosting Titans)**
 
 This was the final, head-to-head competition to determine the champion model.
 
@@ -449,7 +451,7 @@ The model's success represents an **89.1% reduction in forecast error (RMSE)** c
 
 ---
 
-### **Phase 8: From Prediction to Prescription: Generating Actionable Intelligence & Quantifying Business Value**
+#### **Phase 8: From Prediction to Prescription: Generating Actionable Intelligence & Quantifying Business Value**
 
 The ultimate objective of a predictive modeling project is not the model itself, but the value it unlocks. Phase 8 transitions the project from a successful technical exercise into a strategic business asset. This involves three critical steps:
 1.  **Quantifying Value:** Rigorously proving the model's financial and operational worth by benchmarking it against a strong, real-world baseline.
@@ -457,7 +459,7 @@ The ultimate objective of a predictive modeling project is not the model itself,
 3.  **Prescribing Action:** Synthesizing these insights into a concrete, data-driven set of strategic and operational recommendations designed to optimize inventory, enhance marketing ROI, and improve overall business efficiency.
 
 
-#### **8.1 The Business Case: A Quantitative Proof of Value**
+##### **8.1 The Business Case: A Quantitative Proof of Value**
 
 **Objective:** To establish a clear, defensible, and quantifiable measure of the model's financial impact and operational improvement.
 
@@ -485,7 +487,7 @@ The value of this error reduction is tangible and multi-faceted:
     *   While a full ROI calculation is complex, this per-prediction improvement metric provides a powerful, quantifiable justification for the model's deployment.
 
 
-#### **8.2 The Diagnostic Dashboard: A Visual Deep Dive into Model Behavior**
+##### **8.2 The Diagnostic Dashboard: A Visual Deep Dive into Model Behavior**
 
 The comprehensive dashboard serves as our primary tool for translating the model's statistical performance into an intuitive, multi-faceted business narrative. It allows us to move beyond a single R² value and understand *how* and *why* the model succeeds.
 
@@ -517,7 +519,7 @@ The comprehensive dashboard serves as our primary tool for translating the model
 *   **Strategic Insight:** This is the clearest example of moving from prediction to prescription. The model not only forecasts sales but, through analysis of its inputs and outputs, helps us understand the *drivers* of those sales, enabling direct optimization of marketing spend.
 
 
-#### **8.3 Prescribing Action: A Data-Driven Strategic Playbook**
+##### **8.3 Prescribing Action: A Data-Driven Strategic Playbook**
 
 The synthesis of our EDA, model results, and dashboard analysis culminates in a set of concrete, high-impact business recommendations.
 
@@ -632,7 +634,7 @@ The frontend, built with Streamlit (`app.py`), is the "cockpit" where the backen
     *   **Actionable Insight:** This is not a list of model failures; it is a prioritized watchlist for operational managers. These are the specific areas that require the most careful inventory management and monitoring because their demand patterns are intrinsically erratic. This allows managers to focus their limited attention where the risk of stockouts or overstocking is highest.
 
 
-### **Phase 11: Operationalizing Intelligence - End-to-End Workflows & Use Cases**
+#### **Phase 11: Operationalizing Intelligence - End-to-End Workflows & Use Cases**
 
 The development of a high-accuracy predictive model is the technical foundation, but its true value is only realized when it is operationalized into the daily, weekly, and quarterly workflows of the business. The **Walmart Intelligence Hub** was designed not as a static reporting dashboard, but as an integrated decision-support ecosystem. This phase demonstrates how different user personas—from regional managers to marketing strategists—leverage the application as an end-to-end system to move from data to insight to decisive action.
 
@@ -640,7 +642,7 @@ Below, we outline three critical, persona-driven workflows that showcase the sys
 
 ---
 
-#### **Use Case 1: The Regional Sales Manager - The "Monday Morning Briefing"**
+##### **Use Case 1: The Regional Sales Manager - The "Monday Morning Briefing"**
 
 *   **Persona:** A Regional Sales Manager (RSM) responsible for the performance of multiple stores.
 *   **Core Problem:** "How did my region perform last week? Where are the biggest opportunities and risks I need to address *this week*?"
@@ -671,7 +673,7 @@ Below, we outline three critical, persona-driven workflows that showcase the sys
 **Value Proposition:** This workflow transforms the RSM's role from reactive (reviewing last month's reports) to proactive (addressing this week's problems before they escalate). The system provides a clear, data-driven path from a high-level anomaly to a specific, actionable conversation.
 
 
-#### **Use Case 2: The Marketing & Promotions Strategist - Quarterly Budget Allocation**
+##### **Use Case 2: The Marketing & Promotions Strategist - Quarterly Budget Allocation**
 
 *   **Persona:** A Marketing Strategist responsible for maximizing the return on a multi-million dollar quarterly markdown budget.
 *   **Core Problem:** "Which departments will give us the biggest bang for our buck? How should I allocate my Q3 promotional budget to maximize sales lift and profitability?"
@@ -700,7 +702,7 @@ Below, we outline three critical, persona-driven workflows that showcase the sys
 **Value Proposition:** This workflow transforms budget allocation from a process based on historical inertia and gut feeling into a dynamic, data-driven optimization exercise. It allows the marketing team to test and validate strategies in a risk-free virtual environment, ensuring that real-world capital is deployed with maximum efficiency.
 
 
-#### **Use Case 3: The Supply Chain & Inventory Analyst - Proactive Risk Mitigation**
+##### **Use Case 3: The Supply Chain & Inventory Analyst - Proactive Risk Mitigation**
 
 *   **Persona:** An Inventory Analyst responsible for ensuring optimal stock levels across thousands of SKUs.
 *   **Core Problem:** "Standard inventory formulas aren't working for all items. Which store-departments are at the highest risk of stocking out or being overstocked, and how should I adjust their inventory policies?"
@@ -729,7 +731,7 @@ Below, we outline three critical, persona-driven workflows that showcase the sys
 **Value Proposition:** This workflow enables a **risk-based inventory management strategy**. It allows the supply chain team to allocate capital (in the form of inventory) more intelligently, systematically reducing stockout risk for volatile products while simultaneously cutting carrying costs for predictable ones, leading to a more efficient and resilient supply chain.
 
 
-#### **The Integrated Intelligence Loop: From Reactive to Proactive**
+##### **The Integrated Intelligence Loop: From Reactive to Proactive**
 
 These workflows demonstrate that the Walmart Intelligence Hub is more than a dashboard; it is a connected, end-to-end system that fosters a data-driven culture. The insights from one workflow directly feed into another, creating a virtuous cycle:
 
@@ -741,11 +743,102 @@ This integrated loop transforms the organization from a collection of siloed, re
 
 ---
 
-**Conclusion**
+### **Appendix C: Interpretative Analysis of Backend Calculation Logic**
 
-The Walmart Intelligence Hub represents the successful completion of the "last mile" of our data science project. Through a robust, decoupled backend architecture and a user-centric, interactive frontend, we have transformed a high-performing predictive model into a suite of powerful tools. The application does not just provide predictions; it provides explanations, enables simulations, and automatically surfaces strategic opportunities. It empowers managers at all levels to move beyond intuition and make consistently data-driven decisions, directly connecting our advanced analytical work to tangible, measurable business value.
+This appendix provides a rigorous, technical justification of the calculation logic deployed within the `predictor.py` backend. We detail the formula and rationale behind every single metric displayed in the frontend application, demonstrating that all numbers are derived from data-driven formulas and artifacts created during the model training process, ensuring that the system's outputs are demonstrably non-magic.
 
-For more technical details and code implementations, please visit our Github & Kaggle link, as attached at the top of this report. Here are some snapshots from the WalMart dashboad app:
+---
+
+#### **C.1 The Foundation: The Role of `_build_feature_set`**
+
+All predictions and simulations originate from the private `_build_feature_set` method. This method's sole purpose is to reproduce the $\mathbf{42-feature\ vector}$ (in the correct order and type) used to train the LightGBM model. This is the critical technical step that prevents **train-serve skew**.
+
+| Feature Category | Logic Source | Justification |
+| :--- | :--- | :--- |
+| **Temporal Features** (`Month_sin`, `Week_cos`) | Derived from the target date using trigonometric functions (`np.sin`, `np.cos`). | Correctly encodes cyclical time to preserve temporal continuity (e.g., Week 52 is close to Week 1). |
+| **Lag/Rolling Features** (`Lag_1`, `Rolling_Avg_4`) | Calculated from the dynamic list of **`historical_sales`**. | Ensures the model's prediction is based on the most recent, true-to-life sales momentum and volatility. |
+| **Hierarchical Baselines** (`StoreDept_Mean`, `Holiday_Lift`) | Retrieved via fast lookup from pre-loaded artifacts (`store_dept_baselines.pkl`, `holiday_lifts.pkl`). | Anchors the prediction on the learned historical average for that specific sales entity (Store-Dept). |
+| **Interaction Features** (`Sales_vs_Baseline`) | Calculated dynamically (`Lag_1` / `StoreDept_Mean`). | Enables the model to predict the *deviation from the norm* rather than the absolute value, which proved to be a superior predictive signal. |
+
+Once the vector is built, the process is: $\mathbf{Vector} \xrightarrow{\text{Preprocessor}} \mathbf{Scaled\ Vector} \xrightarrow{\text{Model.predict}} \mathbf{Log\ Prediction} \xrightarrow{\text{np.expm1}} \mathbf{Final\ Dollar\ Value}$.
+
+
+#### **C.2 Logic for the Executive Dashboard (`get_dashboard_summary`)**
+
+This function calculates the macro KPIs and the model's enterprise-wide financial value.
+
+| Frontend Metric | Backend Logic/Formula | Technical Justification |
+| :--- | :--- | :--- |
+| **Total Historical Sales** | `self.ground_truth_history['Weekly_Sales'].sum()` | Simple sum of all actual weekly sales in the entire dataset. Used as a reference point for scale. |
+| **Avg Weekly Sales** | `self.ground_truth_history.groupby('Date')['Weekly_Sales'].sum().mean()` | Correctly calculates the average *total network sales* per single week. |
+| **Forecast Accuracy (R²)** | `self.metadata.get('test_r2', 0.99)` | **Sourced from validated artifact.** This is the finalized Test R² (0.9996) metric generated on the completely unseen hold-out set during the rigorous time-series validation phase. It is the most robust measure of the model's out-of-sample explanatory power. |
+| **Est. Annual Value** | `Annual Value=Error Reduction × (Stores × Depts × 52)` | **Standard Value Quantification Methodology.** This formula calculates the total financial impact realized by eliminating prediction error across the entire enterprise over one year. |
+| **Error Reduction ($)** | `Error Reduction = Naive RMSE - Model RMSE` | The model's *true* financial value is the dollar amount of prediction error it eliminates compared to a baseline. The **Model RMSE** (`self.metadata.get('test_rmse')`) is $\mathbf{\$433.11}$. The $\mathbf{Naive\ RMSE}$ is calculated as $\mathbf{\$3,975.70}$. Thus, the **Error Reduction is \$3,542.59 per forecast**. |
+| **Value Waterfall Breakdown** | `annual_value * 0.35` (Inventory), `* 0.25` (Stockout), `* 0.15` (Labor), `* 0.25` (Markdown) | **Heuristic Allocation.** The total annual value is allocated across the four primary business levers influenced by better forecasting. The percentages are set as a justified heuristic to illustrate the *drivers* of value (e.g., Inventory and Markdown, at 60% combined, are often the largest levers in retail). |
+| **Top/Bottom Movers** | `Growth = (Recent - Previous) / Previous` (4 weeks vs. prior 4 weeks) | A dynamic, short-term performance indicator. It identifies high-momentum departments that require immediate operational attention (either for stocking out or for rewarding success). Avoids division by zero by using `replace(0, np.nan)`. |
+
+
+#### **C.3 Logic for the Forecast Endpoints**
+
+##### **C.3.1 Live Multi-Step Forecast (`/forecast`)**
+
+| Frontend Element | Logic Source | Technical Justification |
+| :--- | :--- | :--- |
+| **Forecasted Sales** | **Iterative (Recursive) Prediction.** The model predicts Week $T+1$. This prediction is immediately saved and injected as the `Lag_1` and `Rolling_Avg_X` features for the subsequent prediction of Week $T+2$. | This is the mathematically correct method for multi-step-ahead forecasting in time-series models. It ensures the predicted sales momentum and volatility are carried forward, preventing the forecast from unrealistically flattening out. |
+| **Confidence Interval** | **Heuristic Band.** `Upper = Forecast * 1.10`, `Lower = Forecast * 0.90`. | For a production-ready demo, calculating a probabilistic confidence interval is complex. This is an **illustrative heuristic** ($\pm 10\%$). In a true production system, this band would be calculated from the model's predicted error distribution (e.g., using quantiles from an auxiliary model or by calculating $1.96 \times$ the model's predicted standard deviation). |
+
+##### **C.3.2 Promotion Simulator (`/simulate`)**
+
+| Frontend Element | Logic Source | Technical Justification |
+| :--- | :--- | :--- |
+| **Baseline Sales** | `baseline_sales = payload.get('StoreDept_Mean', median)` | Uses the pre-calculated $\mathbf{StoreDept\ Historical\ Mean}$ from the training set. If this mean is too low (or missing), it defaults to the global training median ($\mathbf{\$7,649.64}$), providing a robust, non-promotional expectation. |
+| **Predicted Sales** | Model prediction using a **synthetic feature vector** where the user's `MarkDown1-5` inputs override the model's default zero values. | The model is explicitly forced to predict a sales number **conditioned on the user's proposed marketing spend**. |
+| **Sales Lift** | `sales_lift = predicted_sales - baseline_sales` | Measures the **incremental sales** created by the promotional activity (the predicted sales **above** what would have happened normally). This is the correct calculation for isolating the promotion's effect. |
+| **ROI (Return on Investment)** | `ROI = sales_lift / total_investment` | **Standard Financial Metric.** Measures the financial gain (`sales_lift`) against the cost (`total_investment`), providing the key metric for strategic marketing decisions. |
+
+
+#### **C.4 Logic for the Insights Endpoints**
+
+##### **C.4.1 Operational Watchlist (`/insights/hotspots`)**
+
+| Frontend Metric | Logic Source/Formula | Technical Justification |
+| :--- | :--- | :--- |
+| **CV (Coefficient of Variation)** | $\mathbf{CV = (\frac{Sales\_Volatility}{Avg\_Sales}) \times 100}$ | **Universal Volatility Metric.** The CV is the statistical standard for normalized variability. It measures the standard deviation *relative* to the mean. |
+| **Top 20 Hotspots** | `error_data.nlargest(20, 'CV')` | Ranks all Store-Dept combinations by their CV. High CV (e.g., > 60%) indicates highly unstable, "spiky" demand, signaling the highest operational risk for stockouts or overstocking. This is the analyst's prioritized watchlist. |
+
+##### **C.4.2 Markdown ROI Explorer (`/insights/roi`)**
+
+| Frontend Metric | Logic Source/Formula | Technical Justification |
+| :--- | :--- | :--- |
+| **Avg Sales, Volatility, Sample Count** | Group-by aggregation on historical data (`Weekly_Sales`). | Provides the fundamental metrics needed to assess the size, risk, and stability of each department. |
+| **Est_ROI (Heuristic for Demo)** | $\mathbf{Est\_ROI = (\frac{Volatility}{Avg\_Sales}) \times 5}$ (clipped) | **Heuristic Proxy for Promotional Opportunity.** This metric is **NOT** the model's true ROI (which is in `/simulate`). Instead, it uses the Coefficient of Variation ($\frac{Volatility}{Avg\_Sales}$) as a proxy, positing that items with higher demand *variability* also present a higher *opportunity* for sales lift from a promotion. It scales this CV by 5 to create an illustrative ROI value for dashboard visualization. |
+| **Break-Even Line (1.0x)** | **Hard-coded visual aid on the scatter plot.** | Visually grounds the analysis by showing the point at which promotional spending has zero net profit impact, providing an immediate strategic reference for the user. |
+
+
+#### **Summary of Backend Rigor**
+
+The backend is built upon a foundation of **validated artifacts** and **explicit analytical formulas**, which are applied consistently across every endpoint. The use of advanced statistical metrics (CV, R²), hierarchical lookups, and recursive forecasting methods demonstrates a robust and technically sophisticated approach to delivering business-critical intelligence, moving the system from a "black-box" predictor to a transparent, data-driven decision engine.
+
+---
+
+## **Conclusion**
+
+This project successfully developed, validated, and operationalized a high-precision forecasting framework for Walmart weekly sales. By moving beyond standard analytical approaches and implementing a rigorous, end-to-end data science pipeline, we achieved a definitive improvement in predictive accuracy and translated technical performance into tangible business value.
+
+**Technical Achievement & Model Superiority**
+Through a systematic evaluation of linear, deep learning, and gradient boosting architectures, the **LightGBM** model emerged as the superior solution. It achieved a **Test R² of 0.9996** and a **Test RMSE of \$433.11**, representing an **89.1% reduction in forecast error** compared to a robust Seasonal Naive baseline ($3,975.70). As detailed in **Appendix A**, this performance was not a result of model complexity alone, but of a deliberate feature engineering strategy that encoded cyclical temporality, hierarchical store-department contexts, and promotional signals directly into the dataset. The decision to utilize a strict temporal validation split ensures that these metrics reflect genuine generalization capability, free from data leakage.
+
+**Operational Value & Deployment**
+The transition from a predictive model to a decision-support system was realized through the **Walmart Intelligence Hub**, detailed in **Appendix B**. By decoupling the inference logic into a stateful backend and a user-centric frontend, the system empowers diverse stakeholders—from inventory analysts to marketing strategists—to leverage the model’s outputs directly. The rigorous calculation logic outlined in **Appendix C** ensures that every metric, from the "Operational Watchlist" to the "Markdown ROI Estimate," is derived transparently from validated statistical artifacts, fostering user trust and adoption.
+
+**Strategic Implications**
+The analysis revealed that forecast error is not uniformly distributed; it is concentrated in specific high-volatility store-department combinations and promotional periods. The system’s ability to identify these "hotspots" and simulate the financial impact of markdown strategies offers a clear path to optimizing the estimated **\$1,284M** in annual value identified by the model.
+
+In summary, this report demonstrates that by combining advanced machine learning techniques with a deep understanding of retail dynamics and a focus on production-grade software architecture, it is possible to transform raw transactional data into a resilient, high-value asset for strategic decision-making.
+
+---
+
+## **Dashboard Snapshots**
 
 ![alt text](assets/image.png)
 
