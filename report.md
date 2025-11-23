@@ -5,7 +5,7 @@
 **Team:** FPT Coders  
 **Project Duration:** 3 Weeks  
 **Date:** November 19, 2025  
-**Product Link**: [Github](https://github.com/alberttrann/WalMartAnalyzer) & [Kaggle Notebook](https://www.kaggle.com/code/alberttrann/walmart-sales-forecast-notebook) & [HuggingFace Deployment](https://huggingface.co/spaces/minhhungg/WalMartAnalyzer)
+**Product Link**: [Github](https://github.com/alberttrann/WalMartAnalyzer) & [Kaggle Notebook](https://www.kaggle.com/code/alberttrann/walmart-sales-forecast-notebook)
 
 
 ---
@@ -187,6 +187,8 @@ data['CPI'] = data.groupby('Store')['CPI'].transform(lambda x: x.fillna(x.median
     *   **The Solution:** We applied a `np.log1p` transformation (which calculates `log(x+1)`), a standard and robust technique for stabilizing variance and normalizing skewed data.
     *   **Validation & Impact:** The effect was immediate and profound. As shown in the `describe()` table, the new `Sales_Log` target had a near-symmetric skew of **-1.291** and a kurtosis of **1.94**. The "Sales Log - Distribution" histogram visually confirms this, showing the transformation from a steep, one-sided curve into a much more bell-shaped, quasi-normal distribution. This transformation was one of the single most important steps for achieving high accuracy and model stability. It allowed the model's loss function to treat errors proportionally across the entire range of sales values, leading to a more balanced and accurate final model.
 
+![alt text](image-5.png)
+
 ---
 
 #### **Phase 3 - Deep Exploratory Data Analysis (EDA) & Strategic Hypothesis Validation**
@@ -219,6 +221,10 @@ Before analyzing interactions, we first had to understand the character of each 
         *   **Crucial Insight:** Our `analyze_outliers_contextual` function provided the critical context. It revealed that a significant portion of these so-called "outliers" were not data errors but legitimate business events: **8.0% of `Weekly_Sales` outliers and a staggering 27.8% of `Total_Markdown` outliers occurred during holiday weeks.**
         *   **Strategic Decision:** This finding was pivotal. It gave us the definitive evidence to **not remove these outliers**. Doing so would have blinded the model to the most important and volatile sales periods. Instead, this directed us towards choosing models (like gradient boosted trees) that are inherently robust to such extreme values.
 
+![alt text](image-3.png)
+
+![alt text](image-4.png)
+
 
 ##### **3.2 Bivariate & Multivariate Analysis: Uncovering the Web of Relationships**
 
@@ -241,6 +247,11 @@ Here, we moved beyond individual features to map the complex network of relation
             *   A mixed **"Economic" block** linking `CPI` and `Unemployment`.
         *   **Interpretation:** This confirmed that our feature engineering had successfully created new, cohesive groups of signals that the model could potentially learn from as a unit.
 
+![alt text](image.png)
+
+![alt text](image-1.png)
+
+![alt text](image-2.png)
 
 ##### **3.3 Statistical Hypothesis Testing: Adding Quantitative Rigor**
 
@@ -257,6 +268,7 @@ We used formal statistical tests to move beyond visual inspection and quantitati
 
     3.  **Discrepancies Between Pearson & Spearman:** For `Temperature`, the Pearson correlation was not significant (p=0.133), but the Spearman correlation was highly significant (p < 0.001). This is a nuanced but important finding. Pearson measures *linear* relationships, while Spearman measures *monotonic* (consistently increasing or decreasing) relationships. This discrepancy suggests the relationship between Temperature and Sales is not a straight line but may be, for example, a curve (e.g., sales increase up to a certain temperature, then plateau or decline), which Spearman can detect but Pearson cannot. This hints that non-linear models will be more effective.
 
+![alt text](image-6.png)
 
 ##### **3.4 The Decisive Blow: Multicollinearity Diagnosis and Its Strategic Mandate**
 
@@ -293,6 +305,8 @@ In summary, Phase 3 was a mission of strategic intelligence. We validated that o
     *   **Yearly Seasonality (ACF):** The most striking feature of the ACF plot is the tall, statistically significant spike at **lag 52**. This is the statistical fingerprint of powerful yearly seasonality. It tells us that sales in a given week (e.g., the first week of December) are strongly and positively correlated with sales in the same week of the previous year. This was the single most important long-term pattern to capture.
     *   **Weekly Momentum (ACF & PACF):** We observed a pattern of significant positive correlations in the ACF plot for lags 1 through approximately 4. This represents "sales momentum" or persistence; a week with high sales is likely to be followed by another week of high sales. The PACF plot reinforces this, showing that the first 1-2 lags have the most significant *direct* influence, after which the direct correlation drops off.
 *   **Impact on Strategy:** This analysis was not merely exploratory; it was prescriptive. It gave us a statistically validated list of the most important historical time steps to engineer as features. We knew we absolutely had to include features for lags 1, 2, 3, 4, and 52.
+
+![alt text](image-7.png)
 
 **4.2 Engineering the Time-Series Features (Lags, Rolling Windows, Momentum)**
 
@@ -518,6 +532,7 @@ The comprehensive dashboard serves as our primary tool for translating the model
 *   **The Signal:** This chart directly translates a model input into a strategic business recommendation. The stark visual contrast between the high positive ROI for departments like 95, 9, and 38 and the negative ROI for others provides a clear, data-driven directive.
 *   **Strategic Insight:** This is the clearest example of moving from prediction to prescription. The model not only forecasts sales but, through analysis of its inputs and outputs, helps us understand the *drivers* of those sales, enabling direct optimization of marketing spend.
 
+![alt text](image-8.png)
 
 ##### **8.3 Prescribing Action: A Data-Driven Strategic Playbook**
 
@@ -601,7 +616,7 @@ The frontend, built with Streamlit (`app.py`), is the "cockpit" where the backen
 
 *   **Business Goal:** To provide a high-level, at-a-glance summary of overall business health, model performance, and key strategic opportunities.
 *   **Implementation & Interpretation:**
-    *   **KPI Cards:** The dashboard immediately presents four critical KPIs (`Total Sales`, `Avg Weekly Sales`, `Forecast Accuracy`, `Est. Annual Value`), which are fetched from the `/dashboard_summary` endpoint. The "Est. Annual Value" of **$2.9 Billion** is prominently displayed, immediately justifying the project's value by quantifying the financial impact of the 89.1% error reduction.
+    *   **KPI Cards:** The dashboard immediately presents four critical KPIs (`Total Sales`, `Avg Weekly Sales`, `Forecast Accuracy`, `Est. Annual Value`), which are fetched from the `/dashboard_summary` endpoint. The "Est. Annual Value" of **$759M** is prominently displayed, immediately justifying the project's value by quantifying the financial impact of the 89.1% error reduction.
     *   **Geographic Heatmap:** This interactive map, powered by Plotly and `store_locations.csv`, provides a hypothetical geographic context to performance(`store_locations.csv contains synthetic locations across US to mock real-life scenarios of nationwide sales management`). By toggling between "Sales Growth," "Forecast Volatility," and "ROI Potential," a manager can instantly identify which regions are outperforming, which are most unpredictable (and thus require higher safety stock), and which are prime targets for promotional investment.
     *   **Performance Drivers:** The "Top 5 Growth Leaders" and "Bottom 5 Underperformers" bar charts are not static. They are dynamically generated by the backend's `get_dashboard_summary` method, which compares the most recent 4 weeks of sales to the prior 4 weeks. This provides a real-time, actionable view of which departments are currently gaining or losing momentum nationwide.
     *   **Value Waterfall:** This chart provides a clear, compelling breakdown of *how* the estimated annual value is generated, attributing it to specific business levers like "Inventory Optimization" and "Markdown Reallocation." This is a powerful communication tool for stakeholders.
@@ -832,7 +847,7 @@ Through a systematic evaluation of linear, deep learning, and gradient boosting 
 The transition from a predictive model to a decision-support system was realized through the **Walmart Intelligence Hub**, detailed in **Appendix B**. By decoupling the inference logic into a stateful backend and a user-centric frontend, the system empowers diverse stakeholders—from inventory analysts to marketing strategists—to leverage the model’s outputs directly. The rigorous calculation logic outlined in **Appendix C** ensures that every metric, from the "Operational Watchlist" to the "Markdown ROI Estimate," is derived transparently from validated statistical artifacts, fostering user trust and adoption.
 
 **Strategic Implications**
-The analysis revealed that forecast error is not uniformly distributed; it is concentrated in specific high-volatility store-department combinations and promotional periods. The system’s ability to identify these "hotspots" and simulate the financial impact of markdown strategies offers a clear path to optimizing the estimated **\$1,284M** in annual value identified by the model.
+The analysis revealed that forecast error is not uniformly distributed; it is concentrated in specific high-volatility store-department combinations and promotional periods. The system’s ability to identify these "hotspots" and simulate the financial impact of markdown strategies offers a clear path to optimizing the estimated **\$759M** in annual value identified by the model.
 
 In summary, this report demonstrates that by combining advanced machine learning techniques with a deep understanding of retail dynamics and a focus on production-grade software architecture, it is possible to transform raw transactional data into a resilient, high-value asset for strategic decision-making.
 

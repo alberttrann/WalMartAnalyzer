@@ -250,11 +250,23 @@ class WalmartSalesPredictor:
             avg_weekly_sales = self.ground_truth_history.groupby('Date')['Weekly_Sales'].sum().mean()
 
             # --- 2. Realistic Annual Value Calculation ---
-            naive_forecast = self.ground_truth_history.groupby(['Store', 'Dept'])['Weekly_Sales'].shift(1)
-            naive_rmse = np.sqrt(np.nanmean((self.ground_truth_history['Weekly_Sales'] - naive_forecast)**2))
-            model_rmse = self.metadata.get('test_rmse', 500)
+            # Use shift(52) to align with the 'Seasonal Naive' baseline used in the Notebook
+            naive_forecast = self.ground_truth_history.groupby(['Store', 'Dept'])['Weekly_Sales'].shift(52)
+            
+            # Calculate RMSE only where we have both actuals and a naive forecast
+            squared_errors = (self.ground_truth_history['Weekly_Sales'] - naive_forecast) ** 2
+            naive_rmse = np.sqrt(np.nanmean(squared_errors))
+            
+            # Fallback if naive_rmse calculation fails (e.g., not enough history)
+            if np.isnan(naive_rmse):
+                naive_rmse = 3975.70 # Fallback to the notebook's calculated value
+            
+            model_rmse = self.metadata.get('test_rmse', 433.11) 
+            
+            # Calculate improvement
             error_reduction_per_forecast = naive_rmse - model_rmse if naive_rmse > model_rmse else 0
             
+            # Scale to enterprise value
             num_stores = self.ground_truth_history['Store'].nunique()
             num_depts = self.ground_truth_history['Dept'].nunique()
             weeks_per_year = 52
