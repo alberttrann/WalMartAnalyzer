@@ -144,7 +144,7 @@ inject_custom_css()
 # API CONFIGURATION & DYNAMIC DATA HELPERS
 # ======================================================================================
 
-API_BASE_URL = "https://rw5nxrm0-5000.asse.devtunnels.ms/"
+API_BASE_URL = "https://tqz6mj6j-5000.asse.devtunnels.ms/"
 
 # Use caching for data that doesn't change on every interaction
 @st.cache_data(ttl=3600)  # Cache for 1 hour

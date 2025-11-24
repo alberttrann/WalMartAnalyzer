@@ -2,6 +2,7 @@
 
 **Version:** 2.0 (Full Stack, API-Driven)
 **Date:** 2025-11-07
+**Product Link**: [Github](https://github.com/alberttrann/WalMartAnalyzer) & [Kaggle Notebook](https://www.kaggle.com/code/alberttrann/walmart-sales-forecast-notebook) & [Streamlit Deployment](https://walmartanalyzer.streamlit.app/)
 
 ## **1. Project Overview**
 
