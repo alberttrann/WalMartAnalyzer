@@ -144,14 +144,14 @@ inject_custom_css()
 # API CONFIGURATION & DYNAMIC DATA HELPERS
 # ======================================================================================
 
-API_BASE_URL = "http://127.0.0.1:5000"
+API_BASE_URL = "https://rw5nxrm0-5000.asse.devtunnels.ms/"
 
 # Use caching for data that doesn't change on every interaction
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def get_dashboard_summary():
     """Fetches all KPIs and takeaways for the main dashboard."""
     try:
-        response = requests.get(f"{API_BASE_URL}/dashboard_summary", timeout=10)
+        response = requests.get(f"{API_BASE_URL}/dashboard_summary", timeout=60)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -162,7 +162,7 @@ def get_dashboard_summary():
 def get_roi_data():
     """Fetches the pre-calculated ROI data for the insights tab."""
     try:
-        response = requests.get(f"{API_BASE_URL}/insights/roi", timeout=10)
+        response = requests.get(f"{API_BASE_URL}/insights/roi", timeout=60)
         response.raise_for_status()
         return pd.DataFrame(response.json())
     except requests.exceptions.RequestException:
@@ -172,7 +172,7 @@ def get_roi_data():
 def get_hotspots_data():
     """Fetches the pre-calculated hotspots data for the insights tab."""
     try:
-        response = requests.get(f"{API_BASE_URL}/insights/hotspots", timeout=10)
+        response = requests.get(f"{API_BASE_URL}/insights/hotspots", timeout=60)
         response.raise_for_status()
         return pd.DataFrame(response.json())
     except requests.exceptions.RequestException:
