@@ -151,7 +151,7 @@ API_BASE_URL = "https://tqz6mj6j-5000.asse.devtunnels.ms/"
 def get_dashboard_summary():
     """Fetches all KPIs and takeaways for the main dashboard."""
     try:
-        response = requests.get(f"{API_BASE_URL}/dashboard_summary", timeout=60)
+        response = requests.get(f"{API_BASE_URL}/dashboard_summary", timeout=120)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
